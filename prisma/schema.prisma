@@ -49,6 +49,7 @@ model User {
     image         String?
     accounts      Account[]
     sessions      Session[]
+    news          News[]
 }
 
 model VerificationToken {
@@ -63,7 +64,10 @@ model News {
     id          String   @id @default(cuid())
     title       String
     description String
-    image       String
+    user        User     @relation(fields: [userId], references: [id])
+    userId      String
     createdAt   DateTime @default(now())
     updatedAt   DateTime @updatedAt
+
+    @@index([userId])
 }

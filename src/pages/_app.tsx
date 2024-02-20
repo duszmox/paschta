@@ -18,7 +18,7 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <main className={firaSans.className + " bg-bg"}>
+      <main className={firaSans.className + " bg-bg h-full"}>
         <Component {...pageProps} />
       </main>
     </SessionProvider>

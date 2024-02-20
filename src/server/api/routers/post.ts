@@ -1,3 +1,4 @@
+import { News } from "@prisma/client";
 import { z } from "zod";
 
 import {
@@ -6,37 +7,49 @@ import {
   publicProcedure,
 } from "~/server/api/trpc";
 
-export const postRouter = createTRPCRouter({
-  hello: publicProcedure
-    .input(z.object({ text: z.string() }))
-    .query(({ input }) => {
+export const newsRouter = createTRPCRouter({
+  list: publicProcedure
+    .input(z.object({ start: z.number() }))
+    .query(async ({ input, ctx }) => {
+      let news = await ctx.db.news.findMany({
+        skip: input.start,
+        take: 10,
+        orderBy: {
+          createdAt: "desc",
+        },
+      });
+      let userIds = news.map((news) => news.userId);
+      let users = await ctx.db.user.findMany({
+        where: {
+          id: {
+            in: userIds,
+          },
+        },
+      });
+      let count = await ctx.db.news.count();
       return {
-        greeting: `Hello ${input.text}`,
+        news: news.map((news) => {
+          return {
+            ...news,
+            user: users.find((user) => user.id === news.userId),
+          };
+        }),
+        count: count as number,
       };
     }),
-
   create: protectedProcedure
-    .input(z.object({ name: z.string().min(1) }))
-    .mutation(async ({ ctx, input }) => {
-      // simulate a slow db call
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      return ctx.db.post.create({
+    .input(z.object({ title: z.string(), content: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      return await ctx.db.news.create({
         data: {
-          name: input.name,
-          createdBy: { connect: { id: ctx.session.user.id } },
+          title: input.title,
+          description: input.content,
+          user: {
+            connect: {
+              id: ctx.session.user.id,
+            },
+          },
         },
       });
     }),
-
-  getLatest: protectedProcedure.query(({ ctx }) => {
-    return ctx.db.post.findFirst({
-      orderBy: { createdAt: "desc" },
-      where: { createdBy: { id: ctx.session.user.id } },
-    });
-  }),
-
-  getSecretMessage: protectedProcedure.query(() => {
-    return "you can now see this secret message!";
-  }),
 });

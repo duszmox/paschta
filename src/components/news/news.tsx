@@ -6,6 +6,10 @@ import PersonIcon from "@mui/icons-material/Person";
 import AddIcon from "@mui/icons-material/Add";
 import { useSession } from "next-auth/react";
 import { Button } from "~/components/ui/button";
+import Markdown from "react-markdown";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+
 import {
   AlertDialog,
   AlertDialogAction,
@@ -31,8 +35,29 @@ function NewsComp() {
   const [maxPage, setMaxPage] = useState(0);
   const [news, setNews] = useState<NewsWUser[]>([]);
   const { data: session } = useSession();
+  const [source, setSource] = useState("");
+  const [title, setTitle] = useState("");
+  const [isMutating, setIsMutating] = useState(false);
   const newsQuery = api.news.list.useQuery({
     start: currentPage * 10,
+  });
+
+  const newsAddMutation = api.news.create.useMutation({
+    onMutate: () => {
+      setIsMutating(true);
+    },
+    onSuccess: () => {
+      setTitle("");
+      setSource("");
+      newsQuery.refetch().catch((err) => console.log(err));
+    },
+    onError: (data) => {
+      // setError(data.message);
+      console.log(data.message);
+    },
+    onSettled: () => {
+      setIsMutating(false);
+    },
   });
 
   useEffect(() => {
@@ -44,11 +69,11 @@ function NewsComp() {
 
   return (
     <div className="my-8">
-      {!newsQuery.data ? (
+      {!newsQuery.data || isMutating ? (
         <div role="status" className="">
           <svg
             aria-hidden="true"
-            className="fill-primary text-light inline h-8 w-8 animate-spin"
+            className="inline h-8 w-8 animate-spin fill-primary text-light"
             viewBox="0 0 100 101"
             fill="none"
             xmlns="http://www.w3.org/2000/svg"
@@ -65,68 +90,117 @@ function NewsComp() {
           <span className="sr-only">Loading...</span>
         </div>
       ) : (
-        news.map((news) => (
-          <>
-            {session?.user.id != null ? (
-              <AlertDialog>
-                <AlertDialogTrigger className="mb-4 flex w-full max-w-none">
-                  <Button
-                    variant="outline"
-                    className="bg-dark ml-auto flex items-center border-black p-2 pl-1 align-middle text-orange-50"
-                  >
-                    <AddIcon></AddIcon>
-                    <span>Új hír</span>
-                  </Button>
-                </AlertDialogTrigger>
-                <AlertDialogContent
-                  className={firaSans.className + " border-bg bg-orange-50"}
+        <>
+          {session?.user.id != null ? (
+            <AlertDialog>
+              <AlertDialogTrigger className="mb-4 ml-auto flex max-w-none">
+                <Button
+                  variant="outline"
+                  className="ml-auto flex items-center border-black bg-dark p-2 pl-1 align-middle text-orange-50"
                 >
-                  <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      Are you absolutely sure?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription className="text-gray-800">
-                      This action cannot be undone. This will permanently delete
-                      your account and remove your data from our servers.
-                    </AlertDialogDescription>
-                  </AlertDialogHeader>
-                  <AlertDialogFooter>
-                    <AlertDialogCancel className="hover:bg-bg border-orange-50 bg-orange-50">
-                      Cancel
-                    </AlertDialogCancel>
-                    <AlertDialogAction className="bg-primary hover:bg-dark">
-                      Continue
-                    </AlertDialogAction>
-                  </AlertDialogFooter>
-                </AlertDialogContent>
-              </AlertDialog>
-            ) : null}
-            <div
-              key={news.id}
-              className="border-dark flex min-w-[40rem] max-w-none flex-col rounded-lg border bg-orange-50 px-4 py-3"
-            >
-              <div className="text-xl font-bold">{news.title}</div>
-              <hr className="bg-dark border-dark mr-4 border-[0.5px]" />
-              <div className="mt-2 flex flex-row space-x-2">
-                <div className="center flex flex-row items-center text-sm">
-                  <PersonIcon
-                    className="text-primary align-middle"
-                    fontSize="small"
-                  ></PersonIcon>{" "}
-                  {news.user.name}
+                  <AddIcon></AddIcon>
+                  <span>Új hír</span>
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent
+                className={firaSans.className + " border-bg bg-orange-50"}
+              >
+                <AlertDialogHeader>
+                  <AlertDialogTitle className="text-2xl underline">
+                    Új Hír
+                  </AlertDialogTitle>
+                  <AlertDialogDescription className="text-gray-800">
+                    <div className="mb-2 grid w-full items-center gap-1.5">
+                      <Label htmlFor="title" className="text-lg font-bold">
+                        Hír Címe
+                      </Label>
+                      <Input
+                        type="text"
+                        id="title"
+                        placeholder="Hír címe..."
+                        className="select-none"
+                        onChange={(e) => setTitle(e.target.value)}
+                        value={title}
+                      />
+                    </div>
+                    <div className=" grid w-full items-center gap-1.5">
+                      <Label htmlFor="title" className="text-lg font-bold">
+                        Hír tartalma
+                      </Label>
+                      <textarea
+                        className="... placeholder:opacityp-80 min-h-32 w-full select-none p-2"
+                        placeholder="Markdown leírás"
+                        value={source}
+                        onChange={(e) => setSource(e.target.value)}
+                        autoFocus
+                      />
+                    </div>
+
+                    <article className="w-full pt-5 ">
+                      <p className="text-lg">Markdown Preview</p>
+                      <Markdown className="prose min-w-full !text-black ">
+                        {source.length > 0
+                          ? source
+                          : "*Enter some md in the container above to preview it here.*"}
+                      </Markdown>
+                    </article>
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel className="border-orange-50 bg-orange-50 hover:bg-bg">
+                    Cancel
+                  </AlertDialogCancel>
+                  <AlertDialogAction
+                    className="bg-primary hover:bg-dark"
+                    disabled={title.length < 1 || source.length < 1}
+                    onClick={() => {
+                      if (title.length > 0 && source.length > 0) {
+                        newsAddMutation.mutateAsync({
+                          title: title,
+                          content: source,
+                        });
+                      }
+                    }}
+                  >
+                    Continue
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          ) : null}
+          {news.map((news) => (
+            <>
+              <div
+                key={news.id}
+                className="mb-4 flex min-w-[40rem] max-w-none flex-col rounded-lg border border-dark bg-orange-50 px-4 py-3"
+              >
+                <div className="text-xl font-bold">{news.title}</div>
+                <hr className="mr-4 border-[0.5px] border-dark bg-dark" />
+                <div className="mt-2 flex flex-row space-x-2">
+                  <div className="center flex flex-row items-center text-sm">
+                    <PersonIcon
+                      className="align-middle text-primary"
+                      fontSize="small"
+                    ></PersonIcon>{" "}
+                    {news.user.name}
+                  </div>
+                  <div className="center flex flex-row items-center text-sm">
+                    <ScheduleIcon
+                      className="align-middle text-primary"
+                      fontSize="small"
+                    ></ScheduleIcon>{" "}
+                    {news.createdAt.toDateString()}
+                  </div>
                 </div>
-                <div className="center flex flex-row items-center text-sm">
-                  <ScheduleIcon
-                    className="text-primary align-middle"
-                    fontSize="small"
-                  ></ScheduleIcon>{" "}
-                  {news.createdAt.toDateString()}
-                </div>
+                <article className="mt-2 w-full">
+                  <Markdown className="prose min-w-full !text-black ">
+                    {news.description}
+                  </Markdown>
+                </article>
               </div>
-              <div className="mt-2">{news.description}</div>
-            </div>
-          </>
-        ))
+            </>
+          ))}
+        </>
       )}
     </div>
   );

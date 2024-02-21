@@ -75,27 +75,39 @@ model News {
 }
 
 model Food {
-    id          String   @id @default(cuid())
-    name        String
-    description String
-    price       Int      @default(1500)
-    createdAt   DateTime @default(now())
-    updatedAt   DateTime @updatedAt
-    Opening     Opening? @relation(fields: [openingId], references: [id])
-    openingId   String?
-    Order       Order[]
-    orderId     String
-
-    @@index([openingId])
+    id           String         @id @default(cuid())
+    name         String
+    description  String
+    price        Int            @default(1500)
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @updatedAt
+    Order        Order[]
+    OpeningFoods OpeningFoods[]
 }
 
 model Opening {
+    id           String         @id @default(cuid())
+    title        String
+    description  String
+    open         DateTime
+    close        DateTime
+    acceping     Boolean
+    createdAt    DateTime       @default(now())
+    updatedAt    DateTime       @updatedAt
+    OpeningFoods OpeningFoods[]
+}
+
+model OpeningFoods {
     id        String   @id @default(cuid())
-    open      DateTime
-    close     DateTime
-    foods     Food[]
+    opening   Opening  @relation(fields: [openingId], references: [id])
+    openingId String
+    food      Food     @relation(fields: [foodId], references: [id])
+    foodId    String
     createdAt DateTime @default(now())
     updatedAt DateTime @updatedAt
+
+    @@index([openingId])
+    @@index([foodId])
 }
 
 model Order {

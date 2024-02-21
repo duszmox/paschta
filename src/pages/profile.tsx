@@ -50,7 +50,7 @@ function Profile() {
         <meta name="description" content="Paschta; kör profil oldal" />
         <link rel="icon" href="/favicon.ico" />
       </Head>
-      <main className="min-h-screen bg-bg">
+      <main className="min-h-[96vh] bg-bg">
         <NavBar></NavBar>
         <div className="flex w-full max-w-none flex-col items-center justify-center p-8">
           <span id="title" className="mb-8 text-3xl font-semibold">

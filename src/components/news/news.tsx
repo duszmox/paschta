@@ -93,10 +93,17 @@ function NewsComp() {
         <>
           {session?.user.id != null ? (
             <AlertDialog>
-              <AlertDialogTrigger className="mb-4 ml-auto flex max-w-none">
+              <AlertDialogTrigger
+                className={
+                  "mb-4 ml-auto flex max-w-none" +
+                  (news.length < 0 ? "" : " mr-auto")
+                }
+              >
                 <Button
                   variant="outline"
-                  className="ml-auto flex items-center border-black bg-dark p-2 pl-1 align-middle text-orange-50"
+                  className={
+                    "ml-auto flex items-center border-black bg-dark p-2 pl-1 align-middle text-orange-50"
+                  }
                 >
                   <AddIcon></AddIcon>
                   <span>Új hír</span>
@@ -124,7 +131,11 @@ function NewsComp() {
                       />
                     </div>
                     <div className=" grid w-full items-center gap-1.5">
-                      <Label htmlFor="title" className="text-lg font-bold">
+                      <Label
+                        htmlFor="title"
+                        className="text-lg font-bold"
+                        autoFocus
+                      >
                         Hír tartalma
                       </Label>
                       <textarea
@@ -132,7 +143,6 @@ function NewsComp() {
                         placeholder="Markdown leírás"
                         value={source}
                         onChange={(e) => setSource(e.target.value)}
-                        autoFocus
                       />
                     </div>
 
@@ -168,38 +178,42 @@ function NewsComp() {
               </AlertDialogContent>
             </AlertDialog>
           ) : null}
-          {news.map((news) => (
-            <>
-              <div
-                key={news.id}
-                className="mb-4 flex min-w-[40rem] max-w-none flex-col rounded-lg border border-dark bg-orange-50 px-4 py-3"
-              >
-                <div className="text-xl font-bold">{news.title}</div>
-                <hr className="mr-4 border-[0.5px] border-dark bg-dark" />
-                <div className="mt-2 flex flex-row space-x-2">
-                  <div className="center flex flex-row items-center text-sm">
-                    <PersonIcon
-                      className="align-middle text-primary"
-                      fontSize="small"
-                    ></PersonIcon>{" "}
-                    {news.user.name}
+          {news.length > 0 ? (
+            news.map((news) => (
+              <>
+                <div
+                  key={news.id}
+                  className="mb-4 flex min-w-96 max-w-none flex-col rounded-lg border border-dark bg-orange-50 px-4 py-3 sm:min-w-[40rem]"
+                >
+                  <div className="text-xl font-bold">{news.title}</div>
+                  <hr className="mr-4 border-[0.5px] border-dark bg-dark" />
+                  <div className="mt-2 flex flex-row space-x-2">
+                    <div className="center flex flex-row items-center text-sm">
+                      <PersonIcon
+                        className="align-middle text-primary"
+                        fontSize="small"
+                      ></PersonIcon>{" "}
+                      {news.user.name}
+                    </div>
+                    <div className="center flex flex-row items-center text-sm">
+                      <ScheduleIcon
+                        className="align-middle text-primary"
+                        fontSize="small"
+                      ></ScheduleIcon>{" "}
+                      {news.createdAt.toDateString()}
+                    </div>
                   </div>
-                  <div className="center flex flex-row items-center text-sm">
-                    <ScheduleIcon
-                      className="align-middle text-primary"
-                      fontSize="small"
-                    ></ScheduleIcon>{" "}
-                    {news.createdAt.toDateString()}
-                  </div>
+                  <article className="mt-2 w-full">
+                    <Markdown className="prose min-w-full !text-black ">
+                      {news.description}
+                    </Markdown>
+                  </article>
                 </div>
-                <article className="mt-2 w-full">
-                  <Markdown className="prose min-w-full !text-black ">
-                    {news.description}
-                  </Markdown>
-                </article>
-              </div>
-            </>
-          ))}
+              </>
+            ))
+          ) : (
+            <div className="text-center">Nincsenek még hírek</div>
+          )}
         </>
       )}
     </div>

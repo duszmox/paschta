@@ -6,6 +6,7 @@ import { Fira_Sans } from "next/font/google";
 import { api } from "~/utils/api";
 
 import "~/styles/globals.css";
+import Footer from "~/components/footer";
 
 const firaSans = Fira_Sans({
   subsets: ["latin"],
@@ -18,8 +19,9 @@ const MyApp: AppType<{ session: Session | null }> = ({
 }) => {
   return (
     <SessionProvider session={session}>
-      <main className={firaSans.className + " bg-bg h-full"}>
+      <main className={firaSans.className + " h-full bg-bg"}>
         <Component {...pageProps} />
+        <Footer></Footer>
       </main>
     </SessionProvider>
   );

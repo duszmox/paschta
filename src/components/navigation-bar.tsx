@@ -21,6 +21,7 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import LogoutIcon from "@mui/icons-material/Logout";
+import ProfileIcon from "@mui/icons-material/Person";
 import { cn } from "~/lib/utils";
 import { Fira_Sans } from "next/font/google";
 
@@ -146,12 +147,18 @@ function NavBar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuItem>
+                    <ProfileIcon></ProfileIcon>
+                    <Link href={"/profile"} className={firaSans.className}>
+                      Profil
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
                     <LogoutIcon></LogoutIcon>
                     <Link
                       href={"/api/auth/signout"}
                       className={firaSans.className}
                     >
-                      Logout
+                      Kijelentkezés
                     </Link>
                   </DropdownMenuItem>
                 </DropdownMenuContent>

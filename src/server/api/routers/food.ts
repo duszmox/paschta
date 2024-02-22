@@ -37,4 +37,8 @@ export const foodRouter = createTRPCRouter({
         count: count as number,
       };
     }),
+  getAll: publicProcedure.query(async ({ ctx }) => {
+    const foods = await ctx.db.food.findMany();
+    return foods;
+  }),
 });

@@ -1,3 +1,4 @@
+import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 
 import {
@@ -18,14 +19,17 @@ export const openingRouter = createTRPCRouter({
         },
       });
       let count = await ctx.db.opening.count();
+      let openingFoods = await ctx.db.openingFoods.findMany({
+        where: {
+          openingId: {
+            in: openings.map((opening) => opening.id),
+          },
+        },
+      });
       let foods = await ctx.db.food.findMany({
         where: {
-          OpeningFoods: {
-            some: {
-              openingId: {
-                in: openings.map((opening) => opening.id),
-              },
-            },
+          id: {
+            in: openingFoods.map((openingFood) => openingFood.foodId),
           },
         },
       });
@@ -33,7 +37,13 @@ export const openingRouter = createTRPCRouter({
         openings: openings.map((opening) => {
           return {
             ...opening,
-            foods: foods,
+            foods: foods.filter((food) =>
+              openingFoods.find(
+                (openingFood) =>
+                  openingFood.openingId === opening.id &&
+                  openingFood.foodId === food.id,
+              ),
+            ),
           };
         }),
         count: count as number,
@@ -71,18 +81,26 @@ export const openingRouter = createTRPCRouter({
         data: foods.map((food) => ({
           openingId: opening.id,
           foodId: food.id,
-          opening: {
-            connect: {
-              id: opening.id,
-            },
-          },
-          food: {
-            connect: {
-              id: food.id,
-            },
-          },
         })),
       });
       return opening;
+    }),
+  delete: protectedProcedure
+    .input(z.object({ id: z.string() }))
+    .mutation(async ({ input, ctx }) => {
+      let opening = await ctx.db.opening.findUnique({
+        where: { id: input.id },
+      });
+      if (!opening) {
+        throw new TRPCError({ code: "NOT_FOUND" });
+      }
+      await ctx.db.openingFoods.deleteMany({
+        where: {
+          openingId: opening.id,
+        },
+      });
+      await ctx.db.opening.delete({
+        where: { id: input.id },
+      });
     }),
 });
